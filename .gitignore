@@ -75,3 +75,8 @@ pubspec.lock
 # Secrets — never commit real keys
 **/*.env
 secrets.dart
+
+# flutter create byproducts not used by this sample
+.metadata
+analysis_options.yaml
+/test/
