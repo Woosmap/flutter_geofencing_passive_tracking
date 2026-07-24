@@ -9,10 +9,10 @@ via a native **REST call** — the iOS side in **Swift**, the Android side in **
 ## How it works
 
 ```
-┌─────────────┐    startTracking('passiveTracking')   ┌──────────────────────┐
+┌─────────────┐    startTracking('passiveTracking')   ┌───────────────────────┐
 │  Dart (UI)  │ ───────────────────────────────────►  │ Woosmap Geofencing    │
-│ main.dart   │                                        │ SDK (native)          │
-│ service.dart│                                        └──────────┬───────────┘
+│ main.dart   │                                       │ SDK (native)          │
+│ service.dart│                                       └───────────┬───────────┘
 └─────────────┘                                                   │ region event
                                                                   ▼
                               iOS: NotificationCenter      Android: Broadcast
@@ -22,7 +22,7 @@ via a native **REST call** — the iOS side in **Swift**, the Android side in **
                                         ▼                          ▼
                           GeofencingEventsReceiver.swift   GeofencingEventsReceiver.kt
                                         │                          │
-                                        └────────► HTTP POST ◄──────┘
+                                        └────────► HTTP POST ◄─────┘
                                                      │
                                                      ▼
                                           Customer back-office REST API
