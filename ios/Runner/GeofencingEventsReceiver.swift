@@ -35,19 +35,19 @@ class GeofencingEventsReceiver: NSObject {
 
     // Base payload — always present.
     var payload: [String: Any] = [
-      "date": ISO8601DateFormatter().string(from: region.date ?? Date()),
+      "date": ISO8601DateFormatter().string(from: region.date),
       "eventName": eventName,
-      "id": region.identifier ?? "",
+      "id": region.identifier,
       "latitude": region.latitude,
       "longitude": region.longitude,
       "radius": region.radius,
       "didEnter": region.didEnter,
-      "origin": region.origin ?? ""
+      "origin": region.origin
     ]
 
     // Enrich with POI attributes when the region originates from a POI.
     if region.origin == "POI",
-       let poi = POIs.getPOIbyIdStore(idstore: region.identifier ?? "") as POI? {
+       let poi = POIs.getPOIbyIdStore(idstore: region.identifier) as POI? {
       payload["idStore"]     = poi.idstore ?? ""
       payload["name"]        = poi.name ?? ""
       payload["city"]        = poi.city ?? ""

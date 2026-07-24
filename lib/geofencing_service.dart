@@ -16,6 +16,18 @@ const String kWoosmapPrivateApiKey = 'YOUR_WOOSMAP_PRIVATE_API_KEY';
 class GeofencingService {
   final GeofencingFlutterPlugin _geofencing = GeofencingFlutterPlugin();
 
+  /// Current Woosmap location-permission status, one of:
+  /// `GRANTED_BACKGROUND`, `GRANTED_FOREGROUND`, `DENIED`, `UNKNOWN`.
+  Future<String?> permissionStatus() => _geofencing.getPermissionsStatus();
+
+  /// Ask the OS for location permission via the plugin.
+  ///
+  /// [background] requests "Always"/background access (needed for
+  /// passiveTracking); when false it requests foreground ("When In Use").
+  /// Returns the resulting status string (see [permissionStatus]).
+  Future<String?> requestPermission({bool background = false}) =>
+      _geofencing.requestPermissions(withBackgroundAccess: background);
+
   /// Initialize the plugin and start passive tracking.
   ///
   /// Call this only AFTER the user has granted location permission

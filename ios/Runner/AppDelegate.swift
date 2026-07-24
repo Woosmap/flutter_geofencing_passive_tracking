@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 
+@main
 @objc class AppDelegate: FlutterAppDelegate {
   // Keep a strong reference so the observer stays registered for the app's lifetime.
   let objReceiver = GeofencingEventsReceiver()

@@ -116,7 +116,7 @@ regeneration is needed — just fetch dependencies and run.
 
 The Android project is committed with the settings the Woosmap SDK needs:
 
-- `android/settings.gradle` — AGP 8.7.3 / Kotlin 2.1.0 (Gradle wrapper 8.12).
+- `android/settings.gradle` — AGP 8.11.1 / Kotlin 2.2.20 (Gradle wrapper 8.14).
 - `android/gradle.properties` — `android.useAndroidX=true` and
   `android.enableJetifier=true` (the SDK's dependency graph is AndroidX).
 - `android/app/build.gradle` — `compileSdk = 36` and `minSdk = 26`, both

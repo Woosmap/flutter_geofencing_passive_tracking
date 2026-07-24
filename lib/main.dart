@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -27,32 +30,165 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final GeofencingService _service = GeofencingService();
   String _status = 'Idle';
 
-  /// Request location permission before starting tracking.
-  ///
-  /// passiveTracking runs in the background, so you ultimately need
-  /// "Always" (locationAlways). iOS requires requesting WhenInUse first,
-  /// then upgrading to Always.
-  Future<bool> _ensureLocationPermission() async {
-    var status = await Permission.locationWhenInUse.request();
-    if (!status.isGranted) return false;
+  /// Latest Woosmap permission status:
+  /// `GRANTED_BACKGROUND`, `GRANTED_FOREGROUND`, `DENIED`, `UNKNOWN` (or null
+  /// until the first check completes).
+  String? _permission;
 
-    var always = await Permission.locationAlways.request();
-    return always.isGranted;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check when returning to the app — e.g. after the user changed the
+    // setting in the system Settings app, or iOS upgraded to "Always".
+    if (state == AppLifecycleState.resumed) {
+      _refreshPermission();
+    }
+  }
+
+  /// Re-read the current permission status into [_permission].
+  Future<void> _refreshPermission() async {
+    final status = await _service.permissionStatus();
+    if (!mounted) return;
+    setState(() => _permission = status);
+  }
+
+  /// Whether we still need to ask the user (show the permission button).
+  /// True while unknown or denied; false once foreground/background granted.
+  bool get _permissionNeedsRequest =>
+      _permission == null ||
+      _permission == 'UNKNOWN' ||
+      _permission == 'DENIED';
+
+  /// Human-readable label for the granted states shown when no request is due.
+  String get _permissionLabel {
+    switch (_permission) {
+      case 'GRANTED_BACKGROUND':
+        return 'Always (background) ✓';
+      case 'GRANTED_FOREGROUND':
+        return 'While in use (foreground)';
+      default:
+        return _permission ?? 'Unknown';
+    }
+  }
+
+  /// Handler for the "Grant location permission" button.
+  ///
+  /// The first request differs per platform:
+  ///   - iOS: request "Always" directly — `requestAlwaysAuthorization` drives
+  ///     the When-In-Use → Always sequence itself.
+  ///   - Android: request foreground ("When In Use") first; the OS won't grant
+  ///     background until foreground is granted, so we upgrade separately below.
+  ///
+  /// IMPORTANT: the plugin does NOT resolve `requestPermissions()` on the first
+  /// (undetermined) call — on iOS it shows the OS prompt and never returns a
+  /// result, so awaiting it hangs. We therefore fire the request without
+  /// awaiting and poll `getPermissionsStatus()` for the outcome instead.
+  Future<void> _requestPermission() async {
+    setState(() => _status = 'Requesting permission…');
+
+    // 1. iOS -> background:true ("Always"); Android -> background:false
+    //    (foreground first).
+    String? status = 'UNKNOWN';
+    if (Platform.isIOS) {
+      unawaited(_service.requestPermission(background: Platform.isIOS));
+      status = await _pollPermission((s) => s != null && s != 'UNKNOWN');
+    } else {
+      status = await _service.requestPermission(background: false);
+    }
+    // 2. Android only: upgrade to background ("Always") once foreground is
+    //    granted. (On iOS step 1 already requested "Always".)
+    if (Platform.isAndroid &&
+        (status == 'GRANTED_FOREGROUND' || status == 'GRANTED_BACKGROUND')) {
+      status = await _service.requestPermission(background: true);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _permission = status;
+      _status = 'Idle';
+    });
+
+    // On Android the plugin does not route to Settings on a hard denial; guide
+    // the user there ourselves. (On iOS the plugin shows its own alert.)
+    if (status == 'DENIED' && Platform.isAndroid) {
+      await _promptOpenSettings(
+        'Location access is denied for this app.\n'
+        'Enable "Always" location in Settings, then try again.',
+      );
+      await _refreshPermission();
+    }
+  }
+
+  /// Poll `getPermissionsStatus()` until [done] is satisfied or [attempts] run
+  /// out, since `requestPermissions()` may not report its result back directly.
+  Future<String?> _pollPermission(
+    bool Function(String?) done, {
+    int attempts = 20,
+    Duration interval = const Duration(milliseconds: 500),
+  }) async {
+    var status = await _service.permissionStatus();
+    for (var i = 0; i < attempts && !done(status); i++) {
+      await Future.delayed(interval);
+      status = await _service.permissionStatus();
+    }
+    return status;
+  }
+
+  /// Show a dialog that routes the user to the system app settings, where
+  /// they can grant a permission the in-app prompt can no longer request.
+  Future<void> _promptOpenSettings(String message) async {
+    if (!mounted) return;
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Location permission needed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    if (open == true) {
+      await openAppSettings();
+    }
   }
 
   Future<void> _start() async {
-    setState(() => _status = 'Requesting permission...');
-    final granted = await _ensureLocationPermission();
-    if (!granted) {
-      setState(() => _status = 'Location permission denied');
+    // Only check that permission is already granted — requesting it is handled
+    // by the "Grant location permission" button.
+    await _refreshPermission();
+    if (!mounted) return;
+    if (_permissionNeedsRequest) {
+      setState(() =>
+          _status = 'Grant location permission before starting tracking.');
       return;
     }
     setState(() => _status = 'Starting passiveTracking...');
     await _service.initAndStart();
+    if (!mounted) return;
     setState(() => _status = 'passiveTracking started');
   }
 
@@ -71,6 +207,20 @@ class _HomePageState extends State<HomePage> {
           children: [
             Text('Status: $_status', style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 24),
+            // Show the permission button while access is unknown/denied;
+            // otherwise just show the current permission state as a label.
+            if (_permissionNeedsRequest)
+              ElevatedButton.icon(
+                onPressed: _requestPermission,
+                icon: const Icon(Icons.location_on),
+                label: const Text('Grant location permission'),
+              )
+            else
+              Text(
+                'Location permission: $_permissionLabel',
+                style: const TextStyle(fontSize: 16),
+              ),
+            const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _start,
               child: const Text('Start passive tracking'),
