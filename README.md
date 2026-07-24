@@ -4,8 +4,6 @@ This sample starts the Woosmap Geofencing `passiveTracking` profile from **Dart*
 and forwards every geofence **region event** (enter/exit) to a customer back-office
 via a native **REST call** — the iOS side in **Swift**, the Android side in **Kotlin**.
 
-It mirrors the Woosmap Batch connector sample, with the `Batch.trackEvent(...)`
-call replaced by an HTTP `POST` to your endpoint.
 
 ## How it works
 
