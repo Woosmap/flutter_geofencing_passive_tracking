@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.woosmap_geofencing_rest_sample"
+    namespace = "com.woosmap.woosmap_geofencing_rest_sample"
     compileSdk = 36
 
     compileOptions {
@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.woosmap_geofencing_rest_sample"
+        applicationId = "com.woosmap.woosmap_geofencing_rest_sample"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.example.woosmap_geofencing_rest_sample
+package com.woosmap.woosmap_geofencing_rest_sample
 
 import android.app.Application
 import android.content.Context
