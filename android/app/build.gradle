@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.woosmap_geofencing_rest_sample"
-    compileSdk = 34
+    compileSdk = 36
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.woosmap_geofencing_rest_sample"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
@@ -40,6 +40,6 @@ dependencies {
     // ---- Woosmap Geofencing SDK ----
     // Needed so the Kotlin receiver can access WoosmapDb / POI classes.
     implementation "androidx.room:room-runtime:2.+"
-    implementation "woosmap:geofencing-core-android-sdk:core_geofence_2.+"
+    implementation "com.github.Woosmap:geofencing-core-android-sdk:core_geofence_2.+"
     implementation "com.webgeoservices.woosmapgeofencing:woosmap-mobile-sdk:4.+"
 }

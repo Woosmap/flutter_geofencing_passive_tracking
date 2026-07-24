@@ -63,13 +63,84 @@ woosmap_geofencing_rest_sample/
 2. **Woosmap API key** — set your Woosmap private key wherever your app
    initializes the SDK (per the Flutter plugin Setup guide).
 
-3. **iOS permissions** — add to `ios/Runner/Info.plist`:
-   - `NSLocationWhenInUseUsageDescription`
-   - `NSLocationAlwaysAndWhenInUseUsageDescription`
-   - Enable the *Location updates* Background Mode.
+3. **iOS permissions** — already set in `ios/Runner/Info.plist`
+   (`NSLocationWhenInUseUsageDescription`,
+   `NSLocationAlwaysAndWhenInUseUsageDescription`, and `UIBackgroundModes` →
+   `location`). Reword the two usage-description strings to match your app —
+   they are the text shown in the iOS permission dialogs.
 
 4. **Android** — background location (`ACCESS_BACKGROUND_LOCATION`) must be
    granted by the user from system settings (Android 10+ shows it separately).
+
+## Run on iOS
+
+The full iOS Xcode project is committed (`Runner.xcodeproj`, `Podfile` pinned to
+iOS 15.0, `Info.plist` with the location permissions). No `flutter create`
+regeneration is needed — just fetch dependencies and run.
+
+1. **Fetch dependencies:**
+
+   ```bash
+   flutter pub get
+   cd ios && pod install && cd ..
+   ```
+
+   If `pod install` crashes with
+   `Unicode Normalization not appropriate for ASCII-8BIT`, your shell locale is
+   not UTF-8 — prefix the command:
+
+   ```bash
+   LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install
+   ```
+
+2. **Set a development team** — open `ios/Runner.xcworkspace`, then
+   Runner target → *Signing & Capabilities*, and select your Apple Developer
+   team (required to run on a physical device).
+
+3. **Run on a device:**
+
+   ```bash
+   flutter devices          # find your device id
+   flutter run -d <device-id>
+   ```
+
+> **Use a real device, not the Simulator.** This is a geofencing /
+> `passiveTracking` sample: the iOS Simulator cannot deliver real region events
+> or background location, and `passiveTracking` requires *Always* location
+> authorization. A physical iPhone is needed to see events fire.
+
+## Run on Android
+
+The Android project is committed with the settings the Woosmap SDK needs:
+
+- `android/settings.gradle` — AGP 8.7.3 / Kotlin 2.1.0 (Gradle wrapper 8.12).
+- `android/gradle.properties` — `android.useAndroidX=true` and
+  `android.enableJetifier=true` (the SDK's dependency graph is AndroidX).
+- `android/app/build.gradle` — `compileSdk = 36` and `minSdk = 26`, both
+  required by `geofencing_flutter_plugin`. The Woosmap SDK is pulled from
+  JitPack via `com.github.Woosmap:geofencing-core-android-sdk` and
+  `com.webgeoservices.woosmapgeofencing:woosmap-mobile-sdk`.
+
+1. **Run it:**
+
+   ```bash
+   flutter pub get
+   flutter devices          # find your device / emulator id
+   flutter run -d <device-id>
+   ```
+
+   The first build downloads Gradle and the Woosmap SDK from JitPack, so it
+   takes a few minutes; later builds are fast.
+
+2. **Grant background location.** `ACCESS_FINE_LOCATION`,
+   `ACCESS_COARSE_LOCATION`, and `ACCESS_BACKGROUND_LOCATION` are declared in
+   `android/app/src/main/AndroidManifest.xml`, but on Android 10+ the user must
+   grant *Allow all the time* from system settings — it is not offered in the
+   in-app prompt.
+
+> An emulator is fine for launching the UI, but real geofence transitions need
+> either a physical device or the emulator's *Extended controls → Location* to
+> inject coordinates.
 
 ## Event payload
 
