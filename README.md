@@ -109,6 +109,39 @@ regeneration is needed — just fetch dependencies and run.
 > or background location, and `passiveTracking` requires *Always* location
 > authorization. A physical iPhone is needed to see events fire.
 
+## Run on Android
+
+The Android project is committed with the settings the Woosmap SDK needs:
+
+- `android/settings.gradle` — AGP 8.7.3 / Kotlin 2.1.0 (Gradle wrapper 8.12).
+- `android/gradle.properties` — `android.useAndroidX=true` and
+  `android.enableJetifier=true` (the SDK's dependency graph is AndroidX).
+- `android/app/build.gradle` — `compileSdk = 36` and `minSdk = 26`, both
+  required by `geofencing_flutter_plugin`. The Woosmap SDK is pulled from
+  JitPack via `com.github.Woosmap:geofencing-core-android-sdk` and
+  `com.webgeoservices.woosmapgeofencing:woosmap-mobile-sdk`.
+
+1. **Run it:**
+
+   ```bash
+   flutter pub get
+   flutter devices          # find your device / emulator id
+   flutter run -d <device-id>
+   ```
+
+   The first build downloads Gradle and the Woosmap SDK from JitPack, so it
+   takes a few minutes; later builds are fast.
+
+2. **Grant background location.** `ACCESS_FINE_LOCATION`,
+   `ACCESS_COARSE_LOCATION`, and `ACCESS_BACKGROUND_LOCATION` are declared in
+   `android/app/src/main/AndroidManifest.xml`, but on Android 10+ the user must
+   grant *Allow all the time* from system settings — it is not offered in the
+   in-app prompt.
+
+> An emulator is fine for launching the UI, but real geofence transitions need
+> either a physical device or the emulator's *Extended controls → Location* to
+> inject coordinates.
+
 ## Event payload
 
 The JSON body sent to the back-office follows the Woosmap connector event spec:
