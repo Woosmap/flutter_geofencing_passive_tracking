@@ -112,6 +112,9 @@ regeneration is needed — just fetch dependencies and run.
 > or background location, and `passiveTracking` requires *Always* location
 > authorization. A physical iPhone is needed to see events fire.
 
+<img width="400" alt="How App looks" src="https://github.com/user-attachments/assets/d0609081-9c2c-4bd6-847f-0971c46adcbc" />
+
+
 ## Run on Android
 
 The Android project is committed with the settings the Woosmap SDK needs:
