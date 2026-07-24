@@ -13,7 +13,9 @@ dependencies:
   # Woosmap Geofencing Flutter plugin.
   geofencing_flutter_plugin: ^1.9.1
 
-  # Used only by the sample UI to request location permission.
+  # Used only to open the app's system settings (openAppSettings) when the
+  # user has denied location and the OS will no longer show the prompt.
+  # Permission requests themselves go through the Woosmap plugin.
   permission_handler: ^11.3.1
 
 dev_dependencies:
