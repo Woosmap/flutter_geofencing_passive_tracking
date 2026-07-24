@@ -104,16 +104,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     // 1. iOS -> background:true ("Always"); Android -> background:false
     //    (foreground first).
-    unawaited(_service.requestPermission(background: Platform.isIOS));
-    var status = await _pollPermission((s) => s != null && s != 'UNKNOWN');
-
+    String? status = 'UNKNOWN';
+    if (Platform.isIOS) {
+      unawaited(_service.requestPermission(background: Platform.isIOS));
+      status = await _pollPermission((s) => s != null && s != 'UNKNOWN');
+    } else {
+      status = await _service.requestPermission(background: false);
+    }
     // 2. Android only: upgrade to background ("Always") once foreground is
     //    granted. (On iOS step 1 already requested "Always".)
     if (Platform.isAndroid &&
         (status == 'GRANTED_FOREGROUND' || status == 'GRANTED_BACKGROUND')) {
-      unawaited(_service.requestPermission(background: true));
-      status = await _pollPermission((s) => s == 'GRANTED_BACKGROUND',
-          attempts: 8);
+      status = await _service.requestPermission(background: true);
     }
 
     if (!mounted) return;
