@@ -60,8 +60,11 @@ woosmap_geofencing_rest_sample/
    Keychain (iOS) / EncryptedSharedPreferences or BuildConfig (Android) rather
    than as a hardcoded constant.
 
-2. **Woosmap API key** — set your Woosmap private key wherever your app
-   initializes the SDK (per the Flutter plugin Setup guide).
+2. **Woosmap API key** — replace the `kWoosmapPrivateApiKey` placeholder in
+   `lib/geofencing_service.dart` with your Woosmap private key. It is passed to
+   the plugin via `WoosmapGeofencingOptions(privateKeyWoosmapAPI: ...)` during
+   `initialize()`. For production, inject it at runtime (secure storage or a
+   build-time environment variable) rather than hardcoding it.
 
 3. **iOS permissions** — already set in `ios/Runner/Info.plist`
    (`NSLocationWhenInUseUsageDescription`,
