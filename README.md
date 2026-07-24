@@ -1,3 +1,4 @@
+
 # Woosmap Geofencing → Back-office (REST) — Flutter Sample
 
 This sample starts the Woosmap Geofencing `passiveTracking` profile from **Dart**,
@@ -147,6 +148,8 @@ The Android project is committed with the settings the Woosmap SDK needs:
 > An emulator is fine for launching the UI, but real geofence transitions need
 > either a physical device or the emulator's *Extended controls → Location* to
 > inject coordinates.
+
+<img width="300" alt="How App looks" src="https://github.com/user-attachments/assets/a992159e-7983-41af-8575-8402b9fb87fe" />
 
 ## Event payload
 
