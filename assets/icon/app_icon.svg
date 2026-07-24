@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#ffffff"/>
+  <!-- Blue arm (top-left) -->
+  <rect x="448" y="222" width="128" height="140" fill="#45c4f5"/>   <!-- cyan (top) -->
+  <rect x="388" y="362" width="188" height="134" fill="#4c82f7"/>   <!-- cornflower (wide) -->
+  <rect x="260" y="362" width="128" height="176" fill="#2e5bf6"/>   <!-- royal blue (tall) -->
+  <rect x="126" y="538" width="262" height="134" fill="#37449c"/>   <!-- indigo (wide) -->
+  <!-- Red/warm arm (bottom-right) -->
+  <rect x="638" y="362" width="124" height="176" fill="#fe5c5c"/>   <!-- coral (tall) -->
+  <rect x="762" y="362" width="128" height="134" fill="#ffa200"/>   <!-- orange -->
+  <rect x="574" y="538" width="188" height="134" fill="#ff0257"/>   <!-- rose (wide) -->
+  <rect x="448" y="538" width="128" height="268" fill="#bc1257"/>   <!-- crimson (tall, bottom) -->
+</svg>

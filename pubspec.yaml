@@ -20,5 +20,17 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # Generates the iOS + Android launcher icons from assets/icon/app_icon.png.
+  flutter_launcher_icons: ^0.14.1
+
 flutter:
   uses-material-design: true
+
+# Run: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
