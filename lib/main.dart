@@ -106,8 +106,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     //    (foreground first).
     String? status = 'UNKNOWN';
     if (Platform.isIOS) {
-      //unawaited(_service.requestPermission(background: Platform.isIOS));
-      //status = await _pollPermission((s) => s != null && s != 'UNKNOWN');
       status = await _service.requestPermission(background: true);
     } else {
       status = await _service.requestPermission(background: false);
