@@ -1,3 +1,4 @@
+
 # Woosmap Geofencing → Back-office (REST) — Flutter Sample
 
 This sample starts the Woosmap Geofencing `passiveTracking` profile from **Dart**,
@@ -8,10 +9,10 @@ via a native **REST call** — the iOS side in **Swift**, the Android side in **
 ## How it works
 
 ```
-┌─────────────┐    startTracking('passiveTracking')   ┌──────────────────────┐
+┌─────────────┐    startTracking('passiveTracking')   ┌───────────────────────┐
 │  Dart (UI)  │ ───────────────────────────────────►  │ Woosmap Geofencing    │
-│ main.dart   │                                        │ SDK (native)          │
-│ service.dart│                                        └──────────┬───────────┘
+│ main.dart   │                                       │ SDK (native)          │
+│ service.dart│                                       └───────────┬───────────┘
 └─────────────┘                                                   │ region event
                                                                   ▼
                               iOS: NotificationCenter      Android: Broadcast
@@ -21,7 +22,7 @@ via a native **REST call** — the iOS side in **Swift**, the Android side in **
                                         ▼                          ▼
                           GeofencingEventsReceiver.swift   GeofencingEventsReceiver.kt
                                         │                          │
-                                        └────────► HTTP POST ◄──────┘
+                                        └────────► HTTP POST ◄─────┘
                                                      │
                                                      ▼
                                           Customer back-office REST API
@@ -112,6 +113,9 @@ regeneration is needed — just fetch dependencies and run.
 > or background location, and `passiveTracking` requires *Always* location
 > authorization. A physical iPhone is needed to see events fire.
 
+<img width="400" alt="How App looks" src="https://github.com/user-attachments/assets/d0609081-9c2c-4bd6-847f-0971c46adcbc" />
+
+
 ## Run on Android
 
 The Android project is committed with the settings the Woosmap SDK needs:
@@ -144,6 +148,8 @@ The Android project is committed with the settings the Woosmap SDK needs:
 > An emulator is fine for launching the UI, but real geofence transitions need
 > either a physical device or the emulator's *Extended controls → Location* to
 > inject coordinates.
+
+<img width="300" alt="How App looks" src="https://github.com/user-attachments/assets/a992159e-7983-41af-8575-8402b9fb87fe" />
 
 ## Event payload
 
