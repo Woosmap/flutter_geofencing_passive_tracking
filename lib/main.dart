@@ -106,8 +106,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     //    (foreground first).
     String? status = 'UNKNOWN';
     if (Platform.isIOS) {
-      unawaited(_service.requestPermission(background: Platform.isIOS));
-      status = await _pollPermission((s) => s != null && s != 'UNKNOWN');
+      status = await _service.requestPermission(background: true);
     } else {
       status = await _service.requestPermission(background: false);
     }
@@ -124,30 +123,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _status = 'Idle';
     });
 
-    // On Android the plugin does not route to Settings on a hard denial; guide
-    // the user there ourselves. (On iOS the plugin shows its own alert.)
-    if (status == 'DENIED' && Platform.isAndroid) {
+    // On Android/ios the plugin does not route to Settings on a hard denial; guide
+    // the user there ourselves.
+    if (status == 'DENIED') {
       await _promptOpenSettings(
         'Location access is denied for this app.\n'
         'Enable "Always" location in Settings, then try again.',
       );
       await _refreshPermission();
     }
-  }
-
-  /// Poll `getPermissionsStatus()` until [done] is satisfied or [attempts] run
-  /// out, since `requestPermissions()` may not report its result back directly.
-  Future<String?> _pollPermission(
-    bool Function(String?) done, {
-    int attempts = 20,
-    Duration interval = const Duration(milliseconds: 500),
-  }) async {
-    var status = await _service.permissionStatus();
-    for (var i = 0; i < attempts && !done(status); i++) {
-      await Future.delayed(interval);
-      status = await _service.permissionStatus();
-    }
-    return status;
   }
 
   /// Show a dialog that routes the user to the system app settings, where
