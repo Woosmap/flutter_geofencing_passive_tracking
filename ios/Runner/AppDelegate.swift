@@ -3,18 +3,14 @@ import Flutter
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  // Keep a strong reference so the observer stays registered for the app's lifetime.
-  let objReceiver = GeofencingEventsReceiver()
-
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    // Start listening for Woosmap geofence region events.
-    objReceiver.startReceivingEvent()
-
+    // Nothing else to wire up: Woosmap region events are handled in Dart by the
+    // background callback registered in lib/geofencing_service.dart.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
