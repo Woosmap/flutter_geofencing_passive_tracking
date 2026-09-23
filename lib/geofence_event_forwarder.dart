@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:geofencing_flutter_plugin/geofencing_flutter_plugin.dart';
 
+import 'geofencing_service.dart' show kWoosmapPrivateApiKey;
+import 'poi_resolver.dart';
+
 /// Back-office endpoint that receives the geofence events.
 // TODO: point this at the customer's back-office.
 const String kBackOfficeUrl =
@@ -19,8 +22,10 @@ const String kBackOfficeApiKey = 'CUSTOMER_API_KEY';
 
 /// Builds the JSON body sent to the back-office for [region].
 ///
-/// Field names follow the Woosmap connector event spec.
-Map<String, Object?> regionEventPayload(Region region) {
+/// Field names follow the Woosmap connector event spec. [poi] holds the
+/// attributes resolved by [PoiResolver]; they are merged in at the top level
+/// and omitted entirely for a custom (non-POI) region.
+Map<String, Object?> regionEventPayload(Region region, {PoiFields? poi}) {
   return <String, Object?>{
     'date': region.date,
     'eventName': region.eventName,
@@ -31,6 +36,7 @@ Map<String, Object?> regionEventPayload(Region region) {
     'didEnter': region.didEnter,
     'spentTime': region.spentTime,
     'fromPositionDetection': region.fromPositionDetection,
+    if (poi != null) ...poi,
   };
 }
 
@@ -56,16 +62,17 @@ class BackOfficeForwarder {
 
   final HttpClient Function() _httpClientFactory;
 
-  /// Sends [region] to [url]. Never throws: a geofence event must not crash
-  /// the background isolate.
-  Future<void> send(Region region) async {
-    final HttpClient client = _httpClientFactory();
+  /// Sends [region] to [url], enriched with [poi] when it could be resolved.
+  /// Never throws: a geofence event must not crash the background isolate.
+  Future<void> send(Region region, {PoiFields? poi}) async {
+    HttpClient? client;
     try {
+      client = _httpClientFactory();
       client.connectionTimeout = const Duration(seconds: 30);
       final HttpClientRequest request = await client.postUrl(Uri.parse(url));
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $apiKey');
-      request.write(jsonEncode(regionEventPayload(region)));
+      request.write(jsonEncode(regionEventPayload(region, poi: poi)));
 
       final HttpClientResponse response = await request.close();
       await response.drain<void>();
@@ -73,7 +80,7 @@ class BackOfficeForwarder {
     } catch (e) {
       debugPrint('Woosmap: back-office POST error: $e');
     } finally {
-      client.close();
+      client?.close();
     }
   }
 }
@@ -81,9 +88,13 @@ class BackOfficeForwarder {
 /// Handles a geofence region event and forwards it to the back-office.
 ///
 /// Registered with `registerBackgroundRegionCallback`, so the plugin wakes it
-/// in a **background isolate** — with no widget tree and no other plugin
-/// available — whenever a region event cannot be delivered on the region
-/// stream, including after the application has been terminated.
+/// in a **background isolate** — with no widget tree — whenever a region event
+/// cannot be delivered on the region stream, including after the application
+/// has been terminated.
+///
+/// The POI behind [Region.identifier] is looked up first (see [PoiResolver])
+/// and merged into the payload; a failed lookup only costs the extra fields,
+/// the event is still forwarded.
 ///
 /// It must stay a top-level function annotated with `@pragma('vm:entry-point')`
 /// so the Dart VM can resolve it from that isolate.
@@ -92,5 +103,14 @@ Future<void> onWoosmapRegionEvent(Region region) async {
   debugPrint(
       'Woosmap: ${region.eventName} on ${region.identifier} '
       '(didEnter=${region.didEnter})');
-  await BackOfficeForwarder().send(region);
+
+  final PoiResolver resolver = PoiResolver(
+    storeApi: WoosmapStoreApi(apiKey: kWoosmapPrivateApiKey),
+  );
+  final PoiFields? poi = await resolver.resolve(region.identifier);
+  if (poi != null) {
+    debugPrint('Woosmap: resolved POI ${poi['name'] ?? poi['idStore']}');
+  }
+
+  await BackOfficeForwarder().send(region, poi: poi);
 }

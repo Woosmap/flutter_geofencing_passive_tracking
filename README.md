@@ -193,11 +193,27 @@ the `Region` handed to the callback. The same fields are sent on both platforms:
 | spentTime             | int    | seconds, on exit events                  |
 | fromPositionDetection | bool   |                                          |
 
-> **POI attributes are no longer enriched into the payload.** The previous
-> native receivers read them from the SDK's local database; the background
-> isolate has no plugin channel available on Android, so the callback stays
-> self-contained (`dart:io` only). Resolve the POI back-office side from `id`,
-> which carries the store id for POI regions.
+### POI enrichment
+
+When the region is a POI region, `PoiResolver` (`lib/poi_resolver.dart`) looks
+the store up from `Region.identifier` and merges these keys into the same
+payload: `idStore`, `name`, `city`, `zipCode`, `countryCode`, `address`, `tags`,
+`types`, `distance`. They are omitted for a custom region, and a failed lookup
+only costs the extra fields — the event is still forwarded.
+
+Two sources, tried in order:
+
+| Source | Platform | Cost |
+| ------ | -------- | ---- |
+| Plugin `getPois()` — SDK's local database | iOS only | ~12 ms, no network |
+| Store API `GET /stores/{id}/` over `dart:io` | both | ~460 ms, one HTTPS call |
+
+The local path needs plugins inside the headless engine, which only iOS
+supports — `AppDelegate` wires it up with
+`GeofencingFlutterPlugin.setPluginRegistrantCallback`. The Android background
+engine registers no plugins and has no Activity, so it always takes the Store
+API path. The API key travels in the `X-Api-Key` header rather than the query
+string, so it stays out of server logs.
 
 ## Notes / production hardening
 
@@ -205,7 +221,9 @@ the `Region` handed to the callback. The same fields are sent on both platforms:
   shares no memory with the UI isolate, and on Android that isolate has no
   plugins registered — only `dart:*` code is safe there. iOS can expose plugins
   to it via `GeofencingFlutterPlugin.setPluginRegistrantCallback` from
-  `AppDelegate`, but code relying on that will not work on Android.
+  `AppDelegate`, as this sample does for the local POI lookup, but anything
+  relying on that needs a `dart:*` fallback for Android — see how `PoiResolver`
+  drops to the Store API.
 - **Retry / offline queue**: geofence events can fire with no connectivity, and
   the isolate is given only a short window to finish, so a failed POST is lost.
   Consider persisting failures and retrying on the next event or app launch.
