@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geofencing_flutter_plugin/geofencing_flutter_plugin.dart';
 
+import 'geofence_event_forwarder.dart';
+
 /// Your Woosmap private API key. Replace this placeholder with your own key —
 /// or, for production, inject it at runtime (e.g. from secure storage or a
 /// build-time environment variable) instead of hardcoding it here.
@@ -8,11 +10,11 @@ const String kWoosmapPrivateApiKey = 'YOUR_WOOSMAP_PRIVATE_API_KEY';
 
 /// Thin wrapper around the Woosmap Geofencing Flutter plugin.
 ///
-/// The Dart layer is only responsible for initializing the plugin and starting
-/// the `passiveTracking` profile. Region events (enter/exit) are captured and
-/// forwarded to the back-office natively:
-///   - iOS:     ios/Runner/GeofencingEventsReceiver.swift
-///   - Android: android/.../GeofencingEventsReceiver.kt
+/// Everything happens in Dart: this class initializes the plugin, starts the
+/// `passiveTracking` profile, and registers [onWoosmapRegionEvent] as the
+/// background region callback. The plugin then wakes that callback in a
+/// background isolate for every region event (enter/exit), including when the
+/// application has been terminated — no native receiver is needed.
 class GeofencingService {
   final GeofencingFlutterPlugin _geofencing = GeofencingFlutterPlugin();
 
@@ -62,10 +64,49 @@ class GeofencingService {
       debugPrint('startTracking(passiveTracking): $result');
     } catch (e) {
       debugPrint('startTracking error: $e');
+      return;
+    }
+
+    // 3. Register the background region callback.
+    //    It must come after startTracking: stopTracking() removes a registered
+    //    callback, since tracking is what produces the region events.
+    await registerBackgroundCallback();
+  }
+
+  /// Register [onWoosmapRegionEvent] as the background region callback, unless
+  /// one is already registered.
+  ///
+  /// The registration is persisted natively, so it survives an application
+  /// restart; this is a no-op when it is still in place.
+  Future<bool> registerBackgroundCallback() async {
+    try {
+      if (await _geofencing.hasBackgroundRegionCallback()) {
+        return true;
+      }
+      final bool registered = await _geofencing
+          .registerBackgroundRegionCallback(onWoosmapRegionEvent);
+      debugPrint('registerBackgroundRegionCallback: $registered');
+      return registered;
+    } catch (e) {
+      debugPrint('registerBackgroundRegionCallback error: $e');
+      return false;
+    }
+  }
+
+  /// Whether a background region callback is currently registered.
+  Future<bool> hasBackgroundCallback() async {
+    try {
+      return await _geofencing.hasBackgroundRegionCallback();
+    } catch (e) {
+      debugPrint('hasBackgroundRegionCallback error: $e');
+      return false;
     }
   }
 
   /// Stop tracking (e.g. when the user opts out).
+  ///
+  /// This also removes the background region callback: no region event is
+  /// produced once tracking is stopped, so nothing is left to wake it.
   Future<void> stop() async {
     try {
       final String? result = await _geofencing.stopTracking();

@@ -1,19 +1,25 @@
 import UIKit
 import Flutter
+import geofencing_flutter_plugin
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  // Keep a strong reference so the observer stays registered for the app's lifetime.
-  let objReceiver = GeofencingEventsReceiver()
-
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    // Start listening for Woosmap geofence region events.
-    objReceiver.startReceivingEvent()
+    // Makes the app's plugins available inside the headless engine the plugin
+    // spins up for onWoosmapRegionEvent. Without this the background isolate
+    // has no method channels, and PoiResolver cannot read the POI from the
+    // SDK's local database — it would fall back to the Store API over HTTP.
+    //
+    // iOS only: the Android background engine registers no plugins, so the
+    // network path is the only one available there.
+    GeofencingFlutterPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

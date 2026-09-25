@@ -39,11 +39,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   /// until the first check completes).
   String? _permission;
 
+  /// Whether a background region callback is registered, i.e. whether region
+  /// events still reach the app once it has been terminated. The registration
+  /// is persisted natively, so it survives a restart.
+  bool _backgroundCallback = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _refreshPermission();
+    _refreshBackgroundCallback();
   }
 
   @override
@@ -66,6 +72,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final status = await _service.permissionStatus();
     if (!mounted) return;
     setState(() => _permission = status);
+  }
+
+  /// Re-read whether a background region callback is registered.
+  Future<void> _refreshBackgroundCallback() async {
+    final bool registered = await _service.hasBackgroundCallback();
+    if (!mounted) return;
+    setState(() => _backgroundCallback = registered);
   }
 
   /// Whether we still need to ask the user (show the permission button).
@@ -174,11 +187,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await _service.initAndStart();
     if (!mounted) return;
     setState(() => _status = 'passiveTracking started');
+    await _refreshBackgroundCallback();
   }
 
   Future<void> _stop() async {
     await _service.stop();
+    if (!mounted) return;
     setState(() => _status = 'Tracking stopped');
+    // stopTracking() also removes the background callback.
+    await _refreshBackgroundCallback();
   }
 
   @override
@@ -204,6 +221,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 'Location permission: $_permissionLabel',
                 style: const TextStyle(fontSize: 16),
               ),
+            const SizedBox(height: 12),
+            Text(
+              'Background events: '
+              '${_backgroundCallback ? "registered ✓" : "not registered"}',
+              style: const TextStyle(fontSize: 16),
+            ),
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: _start,

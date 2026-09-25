@@ -36,10 +36,5 @@ flutter {
     source = "../.."
 }
 
-dependencies {
-    // ---- Woosmap Geofencing SDK ----
-    // Needed so the Kotlin receiver can access WoosmapDb / POI classes.
-    implementation "androidx.room:room-runtime:2.+"
-    implementation "com.github.Woosmap:geofencing-core-android-sdk:core_geofence_2.+"
-    implementation "com.webgeoservices.woosmapgeofencing:woosmap-mobile-sdk:4.+"
-}
+// The Woosmap Geofencing SDK is pulled transitively by
+// geofencing_flutter_plugin — the app declares no SDK dependency of its own.
