@@ -5,7 +5,7 @@ This sample starts the Woosmap Geofencing `passiveTracking` profile from **Dart*
 and forwards every geofence **region event** (enter/exit) to a customer back-office
 via a **REST call made in Dart** — including when the app has been terminated.
 
-It requires `geofencing_flutter_plugin` **1.10.0-dev.1** or later, which added
+It requires `geofencing_flutter_plugin` **1.10.0-dev.2** or later, which added
 `registerBackgroundRegionCallback()`. No native code is involved: earlier
 revisions of this sample carried a Swift observer and a Kotlin `BroadcastReceiver`
 for the same job, and both have been removed.
